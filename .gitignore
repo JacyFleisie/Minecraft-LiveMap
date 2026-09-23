@@ -1,0 +1,54 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+
+# Visual Studio
+.vs/
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.lib
+*.ncb
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.opendb
+
+# Rider
+.idea/
+*.sln.iml
+
+# NuGet
+*.nupkg
+**/packages/*
+!**/packages/build/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+msbuild.log
+
+# Publish
+publish/
+*.publish.xml
+
+# WPF
+App.config
+Settings.settings
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
