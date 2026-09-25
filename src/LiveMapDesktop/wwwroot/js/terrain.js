@@ -497,5 +497,8 @@
 
     // Export to window
     window.TerrainGenerator = TerrainGenerator;
+    window.biomeLayer = biomeLayer;
+    window.gridLayer = gridLayer;
+    window.structureLayer = structureLayer;
 
 })();

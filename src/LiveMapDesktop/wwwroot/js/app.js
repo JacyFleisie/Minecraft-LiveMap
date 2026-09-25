@@ -176,12 +176,50 @@
         state.map.setMaxBounds(bounds);
 
         // Add tile layer (CartoDB Dark) — tiles hidden when zoomed in too far
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        // Falls back to terrain overlay when offline
+        const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             subdomains: 'abcd',
             minZoom: -1,
             maxZoom: 3,
             opacity: 0.7,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
         }).addTo(state.map);
+
+        // Detect tile load failures → offline mode
+        tileLayer.on('tileerror', () => {
+            setOfflineMode(true);
+        });
+
+        // After tiles load, confirm online
+        let tilesLoaded = false;
+        tileLayer.on('tileload', () => {
+            tilesLoaded = true;
+        });
+        tileLayer.on('load', () => {
+            if (tilesLoaded) setOfflineMode(false);
+        });
+
+        // Startup fallback: if tiles haven't loaded within 12s, assume offline
+        setTimeout(() => {
+            if (!state.offline) setOfflineMode(true);
+        }, 12000);
+
+        // Offline fallback: show terrain as map background
+        function setOfflineMode(offline) {
+            if (offline) {
+                document.getElementById('offline-badge')?.classList.remove('hidden');
+                document.getElementById('online-badge')?.classList.add('hidden');
+                // Boost biome overlay to act as map background
+                if (window.biomeLayer) window.biomeLayer.setOpacity(0.85);
+                state.offline = true;
+            } else {
+                document.getElementById('offline-badge')?.classList.add('hidden');
+                document.getElementById('online-badge')?.classList.remove('hidden');
+                if (window.biomeLayer) window.biomeLayer.setOpacity(0.35);
+                state.offline = false;
+            }
+        }
 
         // Initialize trail polyline
         state.trailPolyline = L.polyline([], {
