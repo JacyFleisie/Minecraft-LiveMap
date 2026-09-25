@@ -495,7 +495,7 @@
         },
     };
 
-    // Export to window
+    // Export for C# interop
     window.TerrainGenerator = TerrainGenerator;
     window.biomeLayer = biomeLayer;
     window.gridLayer = gridLayer;

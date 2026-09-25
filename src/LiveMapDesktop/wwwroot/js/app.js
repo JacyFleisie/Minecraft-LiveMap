@@ -346,8 +346,10 @@
         // Generate path ahead
         state.path = generatePath(seed, 500);
 
+        // Update UI with seed info
         document.getElementById('current-seed').textContent = seed;
         document.getElementById('seed-display').style.display = 'block';
+        document.getElementById('struct-count').textContent = state.structures.length;
 
         // Render structures
         renderStructures();
@@ -645,6 +647,12 @@
 
         console.log('[MC Live Map] Initialized');
     }
+
+    // Expose for C# interop (MainWindow.xaml.cs calls updateSeed)
+    window.updateSeed = function (seed) {
+        loadSeed(seed);
+        restartSimulation();
+    };
 
     // Start when DOM is ready
     if (document.readyState === 'loading') {
