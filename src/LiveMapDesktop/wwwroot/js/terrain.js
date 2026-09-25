@@ -209,7 +209,7 @@
                 weight: 1,
                 opacity: 0.15,
                 fillColor: region.biome.color,
-                fillOpacity: 0.25,
+                fillOpacity: 0.55,
                 interactive: false,
             });
 

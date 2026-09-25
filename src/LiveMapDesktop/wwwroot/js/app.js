@@ -206,18 +206,22 @@
             if (!state.offline) setOfflineMode(true);
         }, 12000);
 
-        // Offline fallback: show terrain as map background
+        // Offline fallback: biome overlay becomes the map
         function setOfflineMode(offline) {
             if (offline) {
                 document.getElementById('offline-badge')?.classList.remove('hidden');
                 document.getElementById('online-badge')?.classList.add('hidden');
-                // Boost biome overlay to act as map background
-                if (window.biomeLayer) window.biomeLayer.setOpacity(0.85);
+                // Biome overlay is the map — full opacity
+                if (window.biomeLayer) window.biomeLayer.setOpacity(1.0);
+                // Hide OSM tiles completely when offline
+                tileLayer.setOpacity(0);
                 state.offline = true;
             } else {
                 document.getElementById('offline-badge')?.classList.add('hidden');
                 document.getElementById('online-badge')?.classList.remove('hidden');
-                if (window.biomeLayer) window.biomeLayer.setOpacity(0.35);
+                // Online: biome overlay at 0.55 (seeing OSM through it)
+                if (window.biomeLayer) window.biomeLayer.setOpacity(0.55);
+                tileLayer.setOpacity(0.4);
                 state.offline = false;
             }
         }
