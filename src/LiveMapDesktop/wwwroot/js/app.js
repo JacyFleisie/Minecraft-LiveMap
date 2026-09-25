@@ -369,6 +369,9 @@
         state.pathIndex = 0;
         state.structures = generateStructures(seed);
 
+        // Render biome overlay
+        window.TerrainGenerator.generateBiomes(seed);
+
         // Generate path ahead
         state.path = generatePath(seed, 500);
 
