@@ -144,4 +144,52 @@ public partial class MainWindow : Window
                                            : new SolidColorBrush(Color.FromRgb(0xff, 0x44, 0x44));
         });
     }
+
+    private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        UpdateStatus(" Checking for updates...", true);
+        try
+        {
+            using var client = new System.Net.Http.HttpClient();
+            client.DefaultRequestHeaders.Add("User-Agent", "LiveMapDesktop");
+            var json = await client.GetStringAsync(
+                "https://api.github.com/repos/JacyFleisie/Minecraft-LiveMap/releases/latest");
+            var release = System.Text.Json.JsonSerializer.Deserialize<ReleaseInfo>(json);
+            if (release != null && release.TagName != null)
+            {
+                var current = "v1.0.0";
+                if (release.TagName != current)
+                {
+                    MessageBox.Show(this,
+                        $"Update available: {release.TagName}\n\nClick Help > Check for Updates again after the app restarts to download.",
+                        "Update Available",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show(this,
+                        $"You're running the latest version ({current}).",
+                        "Up to Date",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this,
+                $"Could not check for updates: {ex.Message}",
+                "Update Check Failed",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
+    private class ReleaseInfo
+    {
+        public string? TagName { get; set; }
+        public string? Name { get; set; }
+        public string? HtmlUrl { get; set; }
+    }
 }
