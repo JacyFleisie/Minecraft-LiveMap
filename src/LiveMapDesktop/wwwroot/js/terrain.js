@@ -207,9 +207,9 @@
             const rect = L.rectangle(bounds, {
                 color: region.biome.colorDark,
                 weight: 1,
-                opacity: 0.3,
+                opacity: 0.15,
                 fillColor: region.biome.color,
-                fillOpacity: 0.6,
+                fillOpacity: 0.25,
                 interactive: false,
             });
 
@@ -222,6 +222,7 @@
         }
 
         biomeLayer.addTo(map);
+        biomeLayer.setOpacity(0.35);
     }
 
     // ── Generate Structures ────────────────────────────────────
