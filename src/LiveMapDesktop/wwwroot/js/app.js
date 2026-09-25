@@ -175,55 +175,21 @@
         const bounds = L.latLngBounds([-20000, -20000], [20000, 20000]);
         state.map.setMaxBounds(bounds);
 
-        // Add tile layer (OpenStreetMap) — free, no API key required
-        // Falls back to terrain overlay when offline
-        const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            subdomains: 'abc',
-            minZoom: -1,
-            maxZoom: 3,
-            opacity: 0.65,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            updateWhenIdle: true,
-            updateWhenZooming: false,
-        }).addTo(state.map);
-
-        // Detect tile load failures → offline mode
-        tileLayer.on('tileerror', () => {
-            setOfflineMode(true);
-        });
-
-        // After tiles load, confirm online
-        let tilesLoaded = false;
-        tileLayer.on('tileload', () => {
-            tilesLoaded = true;
-        });
-        tileLayer.on('load', () => {
-            if (tilesLoaded) setOfflineMode(false);
-        });
+        // Minecraft seed map — biome/terrain overlay IS the map
+        // No real-world tiles. The biome overlay is the entire map background.
 
         // Startup fallback: if tiles haven't loaded within 12s, assume offline
         setTimeout(() => {
             if (!state.offline) setOfflineMode(true);
         }, 12000);
 
-        // Offline fallback: biome overlay becomes the map
+        // The biome overlay is always the map — no real-world tiles
         function setOfflineMode(offline) {
-            if (offline) {
-                document.getElementById('offline-badge')?.classList.remove('hidden');
-                document.getElementById('online-badge')?.classList.add('hidden');
-                // Biome overlay is the map — full opacity
-                if (window.biomeLayer) window.biomeLayer.setOpacity(1.0);
-                // Hide OSM tiles completely when offline
-                tileLayer.setOpacity(0);
-                state.offline = true;
-            } else {
-                document.getElementById('offline-badge')?.classList.add('hidden');
-                document.getElementById('online-badge')?.classList.remove('hidden');
-                // Online: biome overlay at 0.55 (seeing OSM through it)
-                if (window.biomeLayer) window.biomeLayer.setOpacity(0.55);
-                tileLayer.setOpacity(0.4);
-                state.offline = false;
-            }
+            // Always show biome at full opacity — this IS the map
+            if (window.biomeLayer) window.biomeLayer.setOpacity(1.0);
+            state.offline = true;
+            document.getElementById('offline-badge')?.classList.remove('hidden');
+            document.getElementById('online-badge')?.classList.add('hidden');
         }
 
         // Initialize trail polyline
