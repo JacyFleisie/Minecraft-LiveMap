@@ -3,308 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft LiveMap</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-          crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-            crossorigin=""></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background-color: #1a1a2e;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #e0e0e0;
-        }
-
-        #map {
-            width: 100%;
-            height: 100%;
-            min-height: 400px;
-            z-index: 1;
-        }
-
-        .map-overlay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1000;
-            background: rgba(26, 26, 46, 0.9);
-            border: 1px solid #f0a500;
-            border-radius: 6px;
-            padding: 12px 16px;
-            color: #e0e0e0;
-            font-size: 13px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-            max-width: 280px;
-        }
-
-        .map-overlay h3 {
-            color: #f0a500;
-            font-size: 14px;
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-
-        .map-overlay p {
-            margin: 3px 0;
-            color: #a0a0b0;
-            font-size: 12px;
-        }
-
-        .seed-display {
-            color: #f0a500;
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        .coords-display {
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px solid #2a2a4e;
-            color: #a0a0b0;
-            font-size: 11px;
-        }
-
-        /* Dark theme overrides for Leaflet controls */
-        .leaflet-control-zoom a {
-            background-color: #16213e !important;
-            color: #f0a500 !important;
-            border-color: #f0a500 !important;
-        }
-
-        .leaflet-control-zoom a:hover {
-            background-color: #1a1a2e !important;
-            color: #ffcc33 !important;
-        }
-
-        .leaflet-control-attribution {
-            background: rgba(26, 26, 46, 0.8) !important;
-            color: #a0a0b0 !important;
-        }
-
-        .leaflet-control-attribution a {
-            color: #f0a500 !important;
-        }
-
-        .leaflet-popup-content-wrapper {
-            background-color: #16213e !important;
-            color: #e0e0e0 !important;
-            border: 1px solid #f0a500 !important;
-            border-radius: 6px !important;
-        }
-
-        .leaflet-popup-tip {
-            background-color: #16213e !important;
-            border: 1px solid #f0a500 !important;
-        }
-    </style>
+    <title>MC LiveMap — Seed Explorer</title>
+    <link rel="stylesheet" href="lib/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css">
+    <script src="lib/leaflet.js"></script>
+    <script src="js/version_data.js"></script>
 </head>
 <body>
-    <div id="map"></div>
 
-    <div class="map-overlay">
-        <h3>Seed Information</h3>
-        <p>Seed: <span class="seed-display" id="seedLabel">None loaded</span></p>
-        <p>Biome: <span id="biomeLabel">-</span></p>
-        <p>Markers: <span id="markerCount">0</span></p>
-        <div class="coords-display">
-            X: <span id="coordX">0</span>, Z: <span id="coordZ">0</span>
-        </div>
-        <button id="seedfinder-trigger" style="margin-top:8px;width:100%;padding:6px;background:rgba(240,165,0,0.15);border:1px solid rgba(240,165,0,0.3);border-radius:4px;color:#f0a500;font-size:11px;cursor:pointer;font-weight:600;">🔍 Seed Finder</button>
+<!-- ─── Map Container ──────────────────────────────────────────────────────── -->
+<div id="map"></div>
+
+<!-- ─── Top Bar ──────────────────────────────────────────────────────────────── -->
+<div class="ui-panel top-bar" id="top-bar">
+    <!-- Seed Input -->
+    <div class="seed-row">
+        <input type="text" id="seed-input"
+               class="seed-input"
+               placeholder="Enter seed (number or text)…"
+               spellcheck="false"
+               autocomplete="off" />
+        <button class="btn-load" id="seed-load">Load</button>
+        <button class="btn-secondary" id="seed-random" title="Random seed">🎲</button>
     </div>
 
-    <script>
-        // Initialize the map with a dark theme
-        const map = L.map('map', {
-            center: [0, 0],
-            zoom: 3,
-            minZoom: 1,
-            maxZoom: 8,
-            zoomControl: true,
-            attributionControl: true,
-            preferCanvas: true
-        });
+    <span class="bar-divider"></span>
 
-        // Add a dark-themed tile layer using CartoDB Dark Matter (free, no key needed)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 8
-        }).addTo(map);
+    <!-- Edition Selector -->
+    <div class="edition-selector" id="edition-selector"></div>
 
-        // Store markers
-        let markers = [];
-        let currentSeed = null;
+    <!-- Version Selector -->
+    <div class="version-selector" id="version-selector"></div>
 
-        // Generate pseudo-random positions from seed string
-        function generateFromSeed(seed, count) {
-            const positions = [];
-            let hash = 0;
-            for (let i = 0; i < seed.length; i++) {
-                const char = seed.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash |= 0;
-            }
+    <span class="bar-divider"></span>
 
-            const seededRandom = function() {
-                const x = Math.sin(hash++) * 10000;
-                return x - Math.floor(x);
-            };
+    <!-- Dimension Selector -->
+    <div class="dimension-selector" id="dimension-selector"></div>
 
-            // Generate various marker positions
-            const markerTypes = [
-                { name: 'Spawn', icon: '🏁', color: '#f0a500' },
-                { name: 'Village', icon: '🏘️', color: '#4CAF50' },
-                { name: 'Stronghold', icon: '🏰', color: '#9C27B0' },
-                { name: 'Temple', icon: '🏛️', color: '#00BCD4' },
-                { name: 'Ocean Monument', icon: '🌊', color: '#2196F3' },
-                { name: 'Woodland Mansion', icon: '🏚️', color: '#795548' },
-                { name: 'Mineshaft', icon: '⛏️', color: '#607D8B' },
-                { name: 'Ruined Portal', icon: '🔮', color: '#FF5722' },
-                { name: 'Pillager Outpost', icon: '🚩', color: '#E91E63' },
-                { name: 'Bastion Remnant', icon: '🔥', color: '#FF9800' },
-                { name: 'End City', icon: '🌌', color: '#673AB7' },
-                { name: 'Ancient City', icon: '💎', color: '#00BCD4' }
-            ];
+    <span class="bar-divider"></span>
 
-            for (let i = 0; i < count; i++) {
-                const lat = (seededRandom() - 0.5) * 60;
-                const lng = (seededRandom() - 0.5) * 80;
-                const type = markerTypes[i % markerTypes.length];
-                positions.push({
-                    lat: lat,
-                    lng: lng,
-                    type: type
-                });
-            }
-            return positions;
-        }
+    <!-- Search -->
+    <div class="search-box">
+        <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search-input"
+                   class="search-input"
+                   placeholder="Search structures &amp; biomes…"
+                   autocomplete="off" />
+            <span class="search-icon" style="margin-left:4px;"></span>
+        </div>
+        <div class="search-results hidden" id="search-results"></div>
+    </div>
 
-        // Clear existing markers
-        function clearMarkers() {
-            markers.forEach(m => map.removeLayer(m));
-            markers = [];
-        }
+    <!-- Expand toggle -->
+    <button class="btn-expand" id="expand-btn" title="Toggle fullscreen map (F)">
+        ⛶ <span>Expand</span>
+    </button>
+</div>
 
-        // Add markers for seed
-        function addMarkersForSeed(seed) {
-            clearMarkers();
+<!-- ─── Fullscreen exit button (appears only in expanded mode) ───────────────── -->
+<button class="fullscreen-exit-btn" id="fullscreen-exit-btn" title="Exit fullscreen map (E)">
+    ✕ <span>Exit Fullscreen</span>
+</button>
 
-            const positions = generateFromSeed(seed, 12);
-            const bounds = [];
+<!-- ─── Left: Feature Panel ──────────────────────────────────────────────────── -->
+<div class="ui-panel feature-panel" id="feature-panel">
+    <div class="panel-title">
+        <span class="feat-toggle-icon" style="font-size:14px;cursor:pointer;color:var(--gold);margin-right:8px;" id="feat-panel-toggle">◀</span>
+        <span>Structures</span>
+        <span id="structure-stats" style="margin-left:auto;font-size:10px;color:var(--text-dim);font-weight:400;">0 structures</span>
+    </div>
+    <div class="feat-scroll"></div>
+</div>
 
-            positions.forEach(pos => {
-                const marker = L.circleMarker([pos.lat, pos.lng], {
-                    radius: 8,
-                    fillColor: pos.type.color,
-                    color: pos.type.color,
-                    weight: 2,
-                    opacity: 0.9,
-                    fillOpacity: 0.6
-                }).addTo(map);
+<!-- ─── Right: Info Panel ────────────────────────────────────────────────────── -->
+<div class="ui-panel info-panel" id="info-panel">
+    <div class="ui-panel-title">📍 Position</div>
 
-                marker.bindPopup(`
-                    <div style="color: #e0e0e0; font-family: 'Segoe UI', sans-serif;">
-                        <strong style="color: #f0a500;">${pos.type.icon} ${pos.type.name}</strong><br>
-                        <span style="font-size: 11px; color: #a0a0b0;">
-                            X: ${Math.round(pos.lng * 50)} | Z: ${Math.round(pos.lat * 50)}
-                        </span>
-                    </div>
-                `);
+    <div class="info-row">
+        <span class="info-label">X</span>
+        <span class="info-value info-value-coord" id="coord-x">0</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Y</span>
+        <span class="info-value info-value-coord" id="coord-y">64</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Z</span>
+        <span class="info-value info-value-coord" id="coord-z">0</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Biome</span>
+        <span class="info-value info-value-dimmed" id="biome-name">―</span>
+    </div>
 
-                markers.push(marker);
-                bounds.push([pos.lat, pos.lng]);
-            });
+    <div class="info-section-title">Map</div>
+    <div class="info-stat"><span>Zoom</span><span class="stat-val" id="zoom-display">3×</span></div>
+    <div class="info-stat"><span>Edition</span><span class="stat-val" id="edition-display">Java</span></div>
+    <div class="info-stat"><span>Version</span><span class="stat-val" id="version-display">1.21</span></div>
+    <div class="info-stat"><span>Dimension</span><span class="stat-val" id="dim-display">Overworld</span></div>
 
-            // Update marker count document.getElementById('markerCount').textContent = markers.length;
+    <div class="info-section-title">Seed</div>
+    <div class="info-stat"><span>Loaded</span><span class="stat-val" id="seed-display" style="font-size:10px;">―</span></div>
+    <div class="info-stat"><span>Markers</span><span class="stat-val" id="marker-count">0</span></div>
+    <div class="info-stat"><span>Structures</span><span class="stat-val" id="struct-count">0</span></div>
+</div>
 
-            // Fit bounds
-            if (bounds.length > 0) {
-                map.fitBounds(bounds, { padding: [40, 40], maxZoom: 6 });
-            }
-        }
+<!-- ─── Bottom Bar: Toggles ──────────────────────────────────────────────────── -->
+<div class="ui-panel bottom-bar" id="bottom-bar">
+    <div class="toggle-row">
+        <label class="toggle-item">
+            <input type="checkbox" id="toggle-biome" checked>
+            <span class="toggle-check"></span>
+            <span class="toggle-label">Biome Overlay</span>
+        </label>
+        <label class="toggle-item">
+            <input type="checkbox" id="toggle-structures" checked>
+            <span class="toggle-check"></span>
+            <span class="toggle-label">Structures</span>
+        </label>
+        <label class="toggle-item">
+            <input type="checkbox" id="toggle-follow" checked>
+            <span class="toggle-check"></span>
+            <span class="toggle-label">Follow Player</span>
+        </label>
+        <label class="toggle-item">
+            <input type="checkbox" id="toggle-grid">
+            <span class="toggle-check"></span>
+            <span class="toggle-label">Chunk Grid</span>
+        </label>
+        <button class="btn-secondary" id="help-btn" title="Keyboard shortcuts" style="font-size:13px;">❓</button>
+    </div>
+</div>
 
-        // Determine "biome" based on seed hash
-        function getBiomeForSeed(seed) {
-            const biomes = [
-                'Plains', 'Desert', 'Savanna', 'Forest', 'Birch Forest',
-                'Dark Forest', 'Swamp', 'Taiga', 'Snowy Taiga', 'Jungle',
-                'Old Growth Pine Taiga', 'Meadow', 'Cherry Grove', 'Mushroom Fields',
-                'Ice Spikes', 'Windswept Hills', 'Jagged Peaks', 'Stony Shore',
-                'Mangrove Swamp', 'Deep Dark'
-            ];
-            let hash = 0;
-            for (let i = 0; i < seed.length; i++) {
-                hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-                hash |= 0;
-            }
-            return biomes[Math.abs(hash) % biomes.length];
-        }
+<!-- ─── Right-Click Context Popover ─────────────────────────────────────────── -->
+<div class="context-popover" id="context-popover">
+    <button class="context-popover-item" data-action="add-marker">
+        <span class="ctx-icon">📍</span> Add Marker
+    </button>
+    <div class="context-popover-divider"></div>
+    <button class="context-popover-item" data-action="clear-markers">
+        <span class="ctx-icon">🗑️</span> Clear Markers
+    </button>
+    <button class="context-popover-item" data-action="center-here">
+        <span class="ctx-icon">🎯</span> Center Here
+    </button>
+</div>
 
-        // Main update function called from C#
-        function updateSeed(seed) {
-            if (!seed || seed.trim() === '') {
-                return;
-            }
+<!-- ─── Waiting Overlay ──────────────────────────────────────────────────────── -->
+<div id="waiting-overlay" class="hidden">
+    <div class="spinner"></div>
+    <div style="font-family:'Courier New',monospace;font-size:13px;color:var(--gold);text-shadow:0 0 12px rgba(240,165,0,0.4);">
+        Loading map…
+    </div>
+    <div style="font-size:11px;color:var(--text-dim);margin-top:8px;">
+        Initializing seed data
+    </div>
+</div>
 
-            currentSeed = seed.trim();
+<!-- ─── Marker Modal ─────────────────────────────────────────────────────────── -->
+<div id="marker-modal-overlay" class="hidden">
+    <div class="modal-card">
+        <div class="modal-title">📍 New Marker</div>
+        <div class="modal-sub" id="marker-modal-coords">X: 0 &nbsp; Z: 0</div>
 
-            // Update UI
-            document.getElementById('seedLabel').textContent = currentSeed;
-            document.getElementById('biomeLabel').textContent = getBiomeForSeed(currentSeed);
-            document.getElementById('markerCount').textContent = '0';
+        <div class="modal-field">
+            <label class="modal-field-label">Marker Name</label>
+            <input type="text" id="marker-name-input" class="modal-input"
+                   placeholder="e.g. My Base, Treasure Spot…" maxlength="60" />
+        </div>
 
-            // Add markers
-            addMarkersForSeed(currentSeed);
+        <div class="modal-field">
+            <label class="modal-field-label">Marker Color</label>
+            <div class="modal-color-row">
+                <input type="color" id="marker-color-input"
+                       class="modal-color-swatch"
+                       value="#f0a500"
+                       style="flex-shrink:0;" />
+                <button class="modal-color-btn" id="marker-color-preset">#f0a500</button>
+                <button class="btn-secondary" id="marker-random-color" style="font-size:12px;padding:9px 10px;" title="Random color">🎲</button>
+            </div>
+        </div>
 
-            // Notify C#
-            if (window.chrome && window.chrome.webview) {
-                window.chrome.webview.postMessage('Seed loaded: ' + currentSeed);
-            }
-        }
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-cancel" id="marker-cancel-btn">Cancel</button>
+            <button class="modal-btn modal-btn-save" id="marker-save-btn">Save</button>
+        </div>
+    </div>
+</div>
 
-        // Track mouse position on map
-        map.on('mousemove', function(e) {
-            document.getElementById('coordX').textContent = Math.round(e.latlng.lng * 50);
-            document.getElementById('coordZ').textContent = Math.round(e.latlng.lat * 50);
-        });
+<!-- ─── Help Modal ──────────────────────────────────────────────────────────── -->
+<div class="help-modal-overlay hidden" id="help-modal-overlay">
+    <div class="help-modal">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <h2 style="margin-bottom:4px;">⌨ Keyboard Shortcuts</h2>
+            <button class="btn-secondary" id="help-close-btn" style="align-self:flex-start;font-size:14px;padding:4px 8px;">✕</button>
+        </div>
+        <h3>Map Navigation</h3>
+        <ul>
+            <li><kbd>Arrow Keys</kbd> — Pan map</li>
+            <li><kbd>+</kbd> <kbd>−</kbd> — Zoom in / out</li>
+            <li><kbd>Double-click</kbd> — Zoom in at point</li>
+            <li><kbd>Scroll wheel</kbd> — Zoom</li>
+        </ul>
+        <h3>Mode Toggles</h3>
+        <ul>
+            <li><kbd>F</kbd> — Toggle follow mode</li>
+            <li><kbd>B</kbd> — Toggle biome overlay</li>
+            <li><kbd>S</kbd> — Toggle structures</li>
+            <li><kbd>G</kbd> — Toggle chunk grid</li>
+            <li><kbd>H</kbd> — Toggle feature panel</li>
+            <li><kbd>E</kbd> — Expand / exit fullscreen map</li>
+        </ul>
+        <h3>Markers &amp; Interaction</h3>
+        <ul>
+            <li><kbd>Right-click</kbd> on map — Place custom marker</li>
+            <li><kbd>Click</kbd> structure marker — View details</li>
+            <li><kbd>Esc</kbd> — Close modals / clear search</li>
+            <li><kbd>Enter</kbd> in seed field — Load seed</li>
+        </ul>
+        <h3>Version &amp; Dimension</h3>
+        <ul>
+            <li>Use the top bar to select Java or Bedrock, then a specific version</li>
+            <li>Structure availability varies by version — the feature panel filters automatically</li>
+            <li>Dimension selector changes which structures and biomes are shown</li>
+        </ul>
+        <button class="modal-close-btn" id="help-done-btn">Got it</button>
+    </div>
+</div>
 
-        // Track clicks to place custom markers
-        map.on('click', function(e) {
-            const marker = L.marker([e.latlng.lat, e.latlng.lng], {
-                title: 'Custom Waypoint'
-            }).addTo(map);
+<!-- ─── Toast ────────────────────────────────────────────────────────────────── -->
+<div class="toast hidden" id="toast">
+    <span class="toast-icon">✓</span>
+    <span id="toast-msg">Ready</span>
+</div>
 
-            marker.bindPopup(`
-                <div style="color: #e0e0e0;">
-                    <strong style="color: #f0a500;">📍 Waypoint</strong><br>
-                    <span style="font-size: 11px; color: #a0a0b0;">
-                        X: ${Math.round(e.latlng.lng * 50)} | Z: ${Math.round(e.latlng.lat * 50)}
-                    </span>
-                </div>
-            `).openPopup();
-
-            markers.push(marker);
-            document.getElementById('markerCount').textContent = markers.length;
-        });
-
-        // Initial state        document.getElementById('seedLabel').textContent = 'None loaded';
-
-        // Notify C# that map is ready
-        if (window.chrome && window.chrome.webview) {
-            window.chrome.webview.postMessage('Map initialized and ready');        
-        }
-    </script>
-    <script src="js/seedfinder.js"></script>
-    <script src="js/coordReader.js"></script>
-    <script src="js/waypoints.js"></script>
-    <script src="js/settings.js"></script>
+<!-- ─── Scripts ──────────────────────────────────────────────────────────────── -->
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
