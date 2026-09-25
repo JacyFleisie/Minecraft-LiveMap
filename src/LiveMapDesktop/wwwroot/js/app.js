@@ -175,13 +175,14 @@
         const bounds = L.latLngBounds([-20000, -20000], [20000, 20000]);
         state.map.setMaxBounds(bounds);
 
-        // Add tile layer (CartoDB Dark) — tiles hidden when zoomed in too far
+        // Add tile layer (OpenStreetMap) — free, no API key required
         // Falls back to terrain overlay when offline
-        const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            subdomains: 'abcd',
+        const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            subdomains: 'abc',
             minZoom: -1,
             maxZoom: 3,
-            opacity: 0.7,
+            opacity: 0.65,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             updateWhenIdle: true,
             updateWhenZooming: false,
         }).addTo(state.map);
