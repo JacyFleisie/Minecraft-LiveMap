@@ -36,7 +36,7 @@
                            Foreground="{StaticResource GoldBrush}"
                            VerticalAlignment="Center"/>
                 <TextBlock Grid.Column="1"
-                           Text="v1.0.1"
+                           Text="v1.0.3"
                            FontSize="12"
                            Foreground="{StaticResource TextSecondaryBrush}"
                            VerticalAlignment="Center"
