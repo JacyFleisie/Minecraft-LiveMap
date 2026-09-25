@@ -222,7 +222,8 @@
         }
 
         biomeLayer.addTo(map);
-        biomeLayer.setOpacity(0.35);
+        // Biome is the map — full opacity for Minecraft seed map look
+        biomeLayer.setOpacity(1.0);
     }
 
     // ── Generate Structures ────────────────────────────────────

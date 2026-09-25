@@ -346,10 +346,12 @@
         // Generate path ahead
         state.path = generatePath(seed, 500);
 
-        // Update UI with seed info
+        // Update UI
         document.getElementById('current-seed').textContent = seed;
-        document.getElementById('seed-display').style.display = 'block';
+        document.getElementById('seed-display').textContent = seed;
+        document.getElementById('seed-display').style.display = 'inline';
         document.getElementById('struct-count').textContent = state.structures.length;
+        document.getElementById('marker-count').textContent = state.markers ? state.markers.length : 0;
 
         // Render structures
         renderStructures();
@@ -641,11 +643,12 @@
         initWebSocket();
         startWaitingTimer();
 
-        // Load default seed for immediate display
-        loadSeed('12345');
+        // Load a random seed for immediate display (no seed entered yet)
+        const randomSeed = Math.floor(Math.random() * 2147483647).toString();
+        loadSeed(randomSeed);
         restartSimulation();
 
-        console.log('[MC Live Map] Initialized');
+        console.log('[MC Live Map] Initialized with random seed: ' + randomSeed);
     }
 
     // Expose for C# interop (MainWindow.xaml.cs calls updateSeed)
